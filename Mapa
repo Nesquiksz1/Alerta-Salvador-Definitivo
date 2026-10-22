@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alerta Salvador 7.0 - Mapa de Riscos</title>
+    <link rel="icon" type="image/jpeg" href="logo_alerta_salvador.png" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #cc0000;
+            color: #ffffff;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .site-title {
+            font-size: 1rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .site-title .main-title {
+            display: block;
+            font-size: 1rem;
+        }
+
+        .site-title .sub-title {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9rem;
+        }
+
+        .header-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .search-container {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 400px;
+            z-index: 1000;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+        }
+
+        .controls-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            color: #333333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            border: none;
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+
+        .control-button:hover {
+            transform: scale(1.1);
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 80px;
+            left: 80px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+            z-index: 1002;
+            display: none;
+        }
+
+        .info-panel.active {
+            display: block;
+        }
+
+        .info-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333333;
+        }
+
+        .info-content {
+            font-size: 0.9rem;
+            color: #666666;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 70px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .legend.active {
+            display: block;
+        }
+
+        .legend-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .legend-text {
+            font-size: 0.8rem;
+            color: #666666;
+        }
+
+        .high-risk {
+            background-color: rgba(204, 0, 0, 0.7);
+        }
+
+        .medium-risk {
+            background-color: rgba(255, 153, 0, 0.7);
+        }
+
+        .low-risk {
+            background-color: rgba(255, 204, 0, 0.7);
+        }
+
+        .links-button {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #cc0000;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            font-size: 1.5rem;
+            border: none;
+            z-index: 1001;
+            transition: transform 0.3s ease;
+        }
+
+        .links-button:hover {
+            transform: scale(1.1);
+        }
+
+        .links-menu {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            display: none;
+            width: 250px;
+        }
+
+        .links-menu.active {
+            display: block;
+        }
+
+        .links-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333333;
+            border-bottom: 1px solid #eeeeee;
+            padding-bottom: 5px;
+        }
+
+        .links-list {
+            list-style: none;
+        }
+
+        .links-item {
+            margin-bottom: 10px;
+        }
+
+        .links-item a {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #333333;
+            font-size: 0.9rem;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .links-item a:hover {
+            background-color: #f5f5f5;
+        }
+
+        .links-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .popup-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 2px solid #cc0000;
+            padding-bottom: 5px;
+        }
+
+        .popup-iras {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+        .risk-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .risk-badge.high {
+            background-color: #cc0000;
+        }
+
+        .risk-badge.medium {
+            background-color: #ff9900;
+        }
+
+        .risk-badge.low {
+            background-color: #ffcc00;
+            color: #333333;
+        }
+
+        .popup-stats {
+            margin-bottom: 10px;
+        }
+
+        .popup-stats h4 {
+            font-size: 0.9rem;
+            color: #333333;
+            margin-bottom: 5px;
+        }
+
+        .popup-stats p {
+            font-size: 0.8rem;
+            color: #666666;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #cc0000;
+        }
+
+        .popup-recommendation {
+            background-color: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #333333;
+            border-left: 3px solid #cc0000;
+        }
+
+        @media (max-width: 768px) {
+            .search-container { width: 90%; }
+            .info-panel { max-width: 250px; bottom: 70px; left: 70px; }
+            .header-info { font-size: 0.8rem; gap: 10px; }
+            .links-menu { width: 200px; }
+            .site-title .main-title { font-size: 0.9rem; }
+            .site-title .sub-title { font-size: 0.7rem; }
+            .logo { width: 25px; height: 25px; }
+        }
+
+        @media (max-width: 480px) {
+            .info-panel { max-width: 200px; bottom: 60px; left: 60px; padding: 10px; }
+            .links-menu { width: 180px; bottom: 60px; }
+            .site-title .main-title { font-size: 0.8rem; }
+            .site-title .sub-title { font-size: 0.6rem; }
+            .header { padding: 8px 10px; }
+            .header-info { font-size: 0.7rem; gap: 8px; }
+            .logo { width: 20px; height: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            <img src="logo_alerta_salvador.png" alt="🛡️" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
+            <span style="display:none; font-size: 24px;">🛡️</span>
+            <h1 class="site-title">
+                <span class="main-title">ALERTA SALVADOR 7.0</span>
+                <span class="sub-title">SEGURANÇA PÚBLICA</span>
+            </h1>
+        </div>
+
+        <div class="header-info">
+            <div class="header-item" id="current-date">
+                <span>📅</span>
+                <span id="date-value">Carregando...</span>
+            </div>
+
+            <div class="header-item" id="current-time">
+                <span>⏰</span>
+                <span id="time-value">Carregando...</span>
+            </div>
+
+            <div class="header-item" id="current-weather">
+                <span>🌤️</span>
+                <span id="weather-value">Carregando...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="map-container">
+        <div id="map"></div>
+
+        <div class="search-container">
+            <input type="text" class="search-box" placeholder="Buscar por bairro ou local..." />
+        </div>
+
+        <div class="controls-container">
+            <button class="control-button" id="legendToggle" title="Legenda">ℹ️</button>
+            <button class="control-button" id="infoToggle" title="Informações">❓</button>
+        </div>
+
+        <button class="links-button" id="linksToggle" title="Links Úteis">🔗</button>
+
+        <div class="links-menu" id="linksMenu">
+            <h3 class="links-title">Links Úteis</h3>
+            <ul class="links-list">
+                <li class="links-item">
+                    <a href="https://youtu.be/9Nm1LRGYshQ?si=NrxqR-7DjfRJkq1a" target="_blank" rel="noopener">
+                        <span class="links-icon">📹</span>
+                        <span>Vídeo sobre violência na Bahia</span>
+                    </a>
+                </li>
+                <li class="links-item">
+                    <a href="https://g1.globo.com/ba/bahia/noticia/2024/05/15/balanco-violencia-na-bahia-entre-janeiro-e-maio-de-2024.ghtml" target="_blank" rel="noopener">
+                        <span class="links-icon">📰</span>
+                        <span>Matéria do G1 sobre violência</span>
+                    </a>
+                </li>
+                <li class="links-item">
+                    <a href="https://atarde.com.br/salvador/salvador-registra-1335-tiroteios-em-2024-saiba-bairros-mais-violentos-1307851" target="_blank" rel="noopener">
+                        <span class="links-icon">🖼️</span>
+                        <span>Estatísticas de tiroteios</span>
+                    </a>
+                </li>
+                <li class="links-item">
+                    <a href="https://fogocruzado.org.br/" target="_blank" rel="noopener">
+                        <span class="links-icon">🔍</span>
+                        <span>Instituto Fogo Cruzado</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="legend" id="legend">
+            <h3 class="legend-title">Níveis de Risco</h3>
+            <div class="legend-item">
+                <div class="legend-color high-risk"></div>
+                <span class="legend-text">Alto Risco (IRAS > 30)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color medium-risk"></div>
+                <span class="legend-text">Médio Risco (IRAS 20-30)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color low-risk"></div>
+                <span class="legend-text">Baixo Risco (IRAS &lt; 20)</span>
+            </div>
+        </div>
+
+        <div class="info-panel" id="infoPanel">
+            <h3 class="info-title">Sobre o Alerta Salvador</h3>
+            <div class="info-content">
+                <p>O Alerta Salvador é um sistema de monitoramento de áreas de risco em Salvador, baseado em dados oficiais e notícias recentes.</p>
+                <p style="margin-top: 8px;">O Índice de Risco Alerta Salvador (IRAS) utiliza dados brutos do Instituto Fogo Cruzado (01/01/2024 a 14/11/2025). Metodologia: Alto Risco (IRAS &gt; 30), Médio Risco (IRAS 20-30), Baixo Risco (IRAS &lt; 20).</p>
+                <p style="margin-top: 8px;">Clique nas áreas coloridas para ver informações detalhadas sobre cada região.</p>
+            </div>
+        </div>
+    </div>
+
+    <audio id="clickSound" src="sounds/click.mp3" preload="auto"></audio>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        const legend = document.getElementById('legend');
+        const infoPanel = document.getElementById('infoPanel');
+        const linksMenu = document.getElementById('linksMenu');
+        const searchInput = document.querySelector('.search-box');
+
+        function playClickSound() {
+            try {
+                const clickSound = document.getElementById('clickSound');
+                if (!clickSound) return;
+
+                clickSound.currentTime = 0;
+                clickSound.play().catch(() => {
+                    console.log('Som não disponível ou bloqueado pelo navegador');
+                });
+            } catch (error) {
+                console.log('Erro ao reproduzir som:', error);
+            }
+        }
+
+        function initializeAudio() {
+            const clickSound = document.getElementById('clickSound');
+            if (!clickSound) return;
+
+            clickSound.play()
+                .then(() => clickSound.pause())
+                .catch(() => {
+                    console.log('Áudio não suportado ou bloqueado');
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const buttons = document.querySelectorAll('#legendToggle, #infoToggle, #linksToggle');
+
+            buttons.forEach((element) => {
+                element.addEventListener('click', playClickSound);
+                element.addEventListener('touchstart', playClickSound);
+            });
+
+            document.body.addEventListener('click', initializeAudio, { once: true });
+            document.body.addEventListener('touchstart', initializeAudio, { once: true });
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+
+            const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const formattedDate = now.toLocaleDateString('pt-BR', dateOptions);
+            document.getElementById('date-value').textContent = formattedDate;
+
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+
+            const formattedTime = now.toLocaleTimeString('pt-BR', timeOptions);
+            document.getElementById('time-value').textContent = formattedTime;
+        }
+
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        async function updateWeather() {
+            try {
+                const lat = -12.9777;
+                const lon = -38.5016;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,precipitation_sum,weathercode&timezone=America%2FBahia`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!data.daily || !data.daily.time || !data.daily.time.length) {
+                    document.getElementById('weather-value').textContent = 'Indisponível';
+                    return;
+                }
+
+                const hoje = new Date();
+                const hojeStr = hoje.toISOString().slice(0, 10);
+
+                let idxHoje = data.daily.time.findIndex((t) => t === hojeStr);
+                if (idxHoje === -1) idxHoje = 0;
+
+                const tempMin = Number(data.daily.temperature_2m_min[idxHoje]).toFixed(1);
+                const tempMax = Number(data.daily.temperature_2m_max[idxHoje]).toFixed(1);
+                const chuva = data.daily.precipitation_sum[idxHoje];
+                const weatherCode = data.daily.weathercode[idxHoje];
+
+                const conditionMap = {
+                    0: 'Céu Limpo',
+                    1: 'Principalmente Limpo',
+                    2: 'Parcialmente Nublado',
+                    3: 'Nublado',
+                    45: 'Névoa',
+                    48: 'Névoa Congelante',
+                    51: 'Chuvisco Fraco',
+                    53: 'Chuvisco Moderado',
+                    55: 'Chuvisco Intenso',
+                    56: 'Chuvisco Congelante Fraco',
+                    57: 'Chuvisco Congelante Intenso',
+                    61: 'Chuva Fraca',
+                    63: 'Chuva Moderada',
+                    65: 'Chuva Forte',
+                    66: 'Chuva Congelante Fraca',
+                    67: 'Chuva Congelante Forte',
+                    71: 'Neve Fraca',
+                    73: 'Neve Moderada',
+                    75: 'Neve Forte',
+                    77: 'Cristais de Gelo',
+                    80: 'Pancadas Fracas',
+                    81: 'Pancadas Moderadas',
+                    82: 'Pancadas Fortes',
+                    85: 'Pancadas de Neve Fracas',
+                    86: 'Pancadas de Neve Fortes',
+                    95: 'Trovoada',
+                    96: 'Trovoada com Granizo Fraco',
+                    99: 'Trovoada com Granizo Forte'
+                };
+
+                const condition = conditionMap[weatherCode] || 'Condição Desconhecida';
+                document.getElementById('weather-value').textContent =
+                    `${condition}, ${tempMin}°C/${tempMax}°C, Precipitação: ${chuva}mm`;
+            } catch (error) {
+                document.getElementById('weather-value').textContent = 'Indisponível';
+                console.error('Erro ao obter dados do clima:', error);
+            }
+        }
+
+        setInterval(updateWeather, 3600000);
+        updateWeather();
+
+        function calcularIRAS({
+            tiroteiosRegistrados,
+            vitimasFatais,
+            pessoasBaleadasNaoFatais,
+            operacoesPoliciais,
+            disputasTerritoriais
+        }) {
+            const pesoTiroteios = 3;
+            const pesoVitimasFatais = 3;
+            const pesoBaleadasNaoFatais = 2;
+            const pesoOperacoes = 1;
+            const pesoDisputas = 2;
+            const somaPesos = 11;
+
+            const iras = (
+                pesoTiroteios * tiroteiosRegistrados +
+                pesoVitimasFatais * vitimasFatais +
+                pesoBaleadasNaoFatais * pessoasBaleadasNaoFatais +
+                pesoOperacoes * operacoesPoliciais +
+                pesoDisputas * disputasTerritoriais
+            ) / somaPesos;
+
+            let riskLevel = 'low';
+
+            if (iras > 30) riskLevel = 'high';
+            else if (iras >= 20 && iras <= 30) riskLevel = 'medium';
+
+            return { iras, riskLevel };
+        }
+
+        const rawAreas = [
+            {
+                name: 'Lobato',
+                center: [-12.918201, -38.481219],
+                radius: 600,
+                stats: {
+                    tiroteios: 73,
+                    vitimas: 58,
+                    baleados: 14,
+                    operacoes: 20,
+                    disputas: 7
+                },
+                recommendation: 'Área com disputas territoriais. Evite circular à noite. Mantenha-se atento em áreas comerciais.'
+            },
+            {
+                name: 'Pernambués',
+                center: [-12.970441, -38.464628],
+                radius: 800,
+                stats: {
+                    tiroteios: 66,
+                    vitimas: 40,
+                    baleados: 4,
+                    operacoes: 24,
+                    disputas: 10
+                },
+                recommendation: 'Evite circular à noite. Mantenha-se atento em áreas comerciais. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Fazenda Grande do Retiro',
+                center: [-12.941721, -38.480473],
+                radius: 700,
+                stats: {
+                    tiroteios: 53,
+                    vitimas: 50,
+                    baleados: 9,
+                    operacoes: 28,
+                    disputas: 4
+                },
+                recommendation: 'Área com alta presença de facções. Evite circular sem conhecer a região. Prefira horários comerciais.'
+            },
+            {
+                name: 'Beiru/Tancredo Neves',
+                center: [-12.944604, -38.447130],
+                radius: 800,
+                stats: {
+                    tiroteios: 68,
+                    vitimas: 32,
+                    baleados: 17,
+                    operacoes: 37,
+                    disputas: 11
+                },
+                recommendation: 'Evite transitar sozinho. Mantenha-se atento a movimentações suspeitas. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Fazenda Coutos',
+                center: [-12.846867, -38.461866],
+                radius: 550,
+                stats: {
+                    tiroteios: 57,
+                    vitimas: 41,
+                    baleados: 12,
+                    operacoes: 21,
+                    disputas: 22
+                },
+                recommendation: 'Evite circular à noite. Mantenha-se atento em áreas comerciais. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Valéria',
+                center: [-12.861244, -38.436772],
+                radius: 1200,
+                stats: {
+                    tiroteios: 50,
+                    vitimas: 33,
+                    baleados: 11,
+                    operacoes: 33,
+                    disputas: 1
+                },
+                recommendation: 'Área com presença de facções. Evite circular sem conhecer a região. Prefira horários comerciais.'
+            },
+            {
+                name: 'Federação',
+                center: [-12.995377, -38.502772],
+                radius: 600,
+                stats: {
+                    tiroteios: 95,
+                    vitimas: 33,
+                    baleados: 11,
+                    operacoes: 46,
+                    disputas: 27
+                },
+                recommendation: 'Mantenha-se atento em áreas comerciais. Evite ruas menos movimentadas. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Itapuã',
+                center: [-12.93640, -38.36280],
+                radius: 1000,
+                stats: {
+                    tiroteios: 40,
+                    vitimas: 30,
+                    baleados: 4,
+                    operacoes: 16,
+                    disputas: 2
+                },
+                recommendation: 'Mantenha-se atento em áreas turísticas. Evite praias desertas. Não exiba objetos de valor.'
+            },
+            {
+                name: 'São Cristóvão',
+                center: [-12.908290, -38.360860],
+                radius: 800,
+                stats: {
+                    tiroteios: 48,
+                    vitimas: 33,
+                    baleados: 9,
+                    operacoes: 25,
+                    disputas: 2
+                },
+                recommendation: 'Mantenha-se atento em áreas comerciais. Evite circular à noite. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Periperi',
+                center: [-12.863425, -38.474542],
+                radius: 800,
+                stats: {
+                    tiroteios: 41,
+                    vitimas: 22,
+                    baleados: 14,
+                    operacoes: 19,
+                    disputas: 13
+                },
+                recommendation: 'Evite circular à noite. Mantenha-se atento em áreas comerciais. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Paripe',
+                center: [-12.834079, -38.469006],
+                radius: 800,
+                stats: {
+                    tiroteios: 41,
+                    vitimas: 35,
+                    baleados: 9,
+                    operacoes: 10,
+                    disputas: 2
+                },
+                recommendation: 'Evite circular sem conhecer a região. Prefira horários comerciais. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Liberdade',
+                center: [-12.946042, -38.493667],
+                radius: 550,
+                stats: {
+                    tiroteios: 39,
+                    vitimas: 23,
+                    baleados: 12,
+                    operacoes: 14,
+                    disputas: 0
+                },
+                recommendation: 'Mantenha-se atento em áreas comerciais. Evite ruas menos movimentadas. Não exiba objetos de valor.'
+            },
+            {
+                name: 'IAPI',
+                center: [-12.953257, -38.480146],
+                radius: 550,
+                stats: {
+                    tiroteios: 44,
+                    vitimas: 31,
+                    baleados: 12,
+                    operacoes: 20,
+                    disputas: 3
+                },
+                recommendation: 'Mantenha-se atento em áreas comerciais. Evite ruas menos movimentadas. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Barra',
+                center: [-13.00577, -38.52839],
+                radius: 750,
+                stats: {
+                    tiroteios: 8,
+                    vitimas: 2,
+                    baleados: 4,
+                    operacoes: 5,
+                    disputas: 0
+                },
+                recommendation: 'Mantenha-se atento em áreas turísticas. Evite praias desertas à noite. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Pituba',
+                center: [-13.00251, -38.45925],
+                radius: 900,
+                stats: {
+                    tiroteios: 7,
+                    vitimas: 1,
+                    baleados: 2,
+                    operacoes: 2,
+                    disputas: 0
+                },
+                recommendation: 'Mantenha-se atento em áreas comerciais. Evite ruas menos movimentadas. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Itaigara',
+                center: [-12.99252, -38.46784],
+                radius: 600,
+                stats: {
+                    tiroteios: 3,
+                    vitimas: 0,
+                    baleados: 4,
+                    operacoes: 0,
+                    disputas: 0
+                },
+                recommendation: 'Mantenha-se atento em áreas comerciais. Evite ruas menos movimentadas. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Engomadeira',
+                center: [-12.949484, -38.456706],
+                radius: 350,
+                stats: {
+                    tiroteios: 19,
+                    vitimas: 6,
+                    baleados: 8,
+                    operacoes: 16,
+                    disputas: 2
+                },
+                recommendation: 'Mantenha-se atento em áreas comerciais. Evite ruas menos movimentadas. Não exiba objetos de valor.'
+            },
+            {
+                name: 'Cajazeiras',
+                center: [0, 0],
+                radius: 0,
+                stats: {
+                    tiroteios: 0,
+                    vitimas: 0,
+                    baleados: 0,
+                    operacoes: 0,
+                    disputas: 0
+                },
+                recommendation: 'Evite circular sem conhecer a região. Prefira horários comerciais. Não exiba objetos de valor.'
+            }
+        ];
+
+        const riskAreas = rawAreas.map((area) => {
+            const resultado = calcularIRAS({
+                tiroteiosRegistrados: area.stats.tiroteios,
+                vitimasFatais: area.stats.vitimas,
+                pessoasBaleadasNaoFatais: area.stats.baleados,
+                operacoesPoliciais: area.stats.operacoes,
+                disputasTerritoriais: area.stats.disputas
+            });
+
+            return {
+                ...area,
+                iras: resultado.iras,
+                riskLevel: resultado.riskLevel
+            };
+        });
+
+        function getRiskColor(riskLevel) {
+            switch (riskLevel) {
+                case 'high':
+                    return 'rgba(204, 0, 0, 0.3)';
+                case 'medium':
+                    return 'rgba(255, 153, 0, 0.3)';
+                case 'low':
+                    return 'rgba(255, 204, 0, 0.3)';
+                default:
+                    return 'rgba(128, 128, 128, 0.3)';
+            }
+        }
+
+        function getRiskBorderColor(riskLevel) {
+            switch (riskLevel) {
+                case 'high':
+                    return '#cc0000';
+                case 'medium':
+                    return '#ff9900';
+                case 'low':
+                    return '#ffcc00';
+                default:
+                    return '#808080';
+            }
+        }
+
+        function getRiskText(riskLevel) {
+            switch (riskLevel) {
+                case 'high':
+                    return 'Alto Risco';
+                case 'medium':
+                    return 'Médio Risco';
+                case 'low':
+                    return 'Baixo Risco';
+                default:
+                    return 'Sem risco';
+            }
+        }
+
+        function getPopupContent(area) {
+            const popupContent = `
+                <div class="popup-title">${area.name}</div>
+                <div class="popup-iras">
+                    <span>IRAS</span>
+                    <span class="risk-badge ${area.riskLevel}">${getRiskText(area.riskLevel)}</span>
+                </div>
+                <div class="popup-stats">
+                    <h4>Estatísticas:</h4>
+                    <p>Tiroteios: <span class="stat-value">${area.stats.tiroteios}</span></p>
+                    <p>Vítimas fatais: <span class="stat-value">${area.stats.vitimas}</span></p>
+                    <p>Pessoas baleadas: <span class="stat-value">${area.stats.baleados}</span></p>
+                    <p>Operações policiais: <span class="stat-value">${area.stats.operacoes}</span></p>
+                    <p>Disputas territoriais: <span class="stat-value">${area.stats.disputas}</span></p>
+                </div>
+                <div class="popup-recommendation">
+                    ${area.recommendation}
+                </div>
+            `;
+
+            return popupContent;
+        }
+
+        const map = L.map('map', {
+            zoomControl: false
+        }).setView([-12.97, -38.48], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        const riskLayerGroup = L.layerGroup().addTo(map);
+
+        function renderRiskAreas() {
+            riskLayerGroup.clearLayers();
+
+            riskAreas.forEach((area) => {
+                const circle = L.circle(area.center, {
+                    radius: area.radius,
+                    color: getRiskBorderColor(area.riskLevel),
+                    fillColor: getRiskBorderColor(area.riskLevel),
+                    fillOpacity: 0.35,
+                    weight: 2
+                });
+
+                const marker = L.marker(area.center, {
+                    opacity: 0
+                });
+
+                circle.bindPopup(getPopupContent(area));
+                marker.bindPopup(getPopupContent(area));
+
+                riskLayerGroup.addLayer(circle);
+                riskLayerGroup.addLayer(marker);
+            });
+        }
+
+        renderRiskAreas();
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const legendToggle = document.getElementById('legendToggle');
+            const infoToggle = document.getElementById('infoToggle');
+            const linksToggle = document.getElementById('linksToggle');
+
+            legendToggle.addEventListener('click', function () {
+                legend.classList.toggle('active');
+            });
+
+            infoToggle.addEventListener('click', function () {
+                infoPanel.classList.toggle('active');
+            });
+
+            linksToggle.addEventListener('click', function () {
+                linksMenu.classList.toggle('active');
+            });
+
+            searchInput.addEventListener('input', function () {
+                const query = searchInput.value.trim().toLowerCase();
+
+                riskLayerGroup.clearLayers();
+
+                if (!query) {
+                    renderRiskAreas();
+                    return;
+                }
+
+                const filteredAreas = riskAreas.filter((area) => {
+                    const name = area.name.toLowerCase();
+                    const statsText = Object.values(area.stats).join(' ').toLowerCase();
+                    return name.includes(query) || statsText.includes(query);
+                });
+
+                filteredAreas.forEach((area) => {
+                    const circle = L.circle(area.center, {
+                        radius: area.radius,
+                        color: getRiskBorderColor(area.riskLevel),
+                        fillColor: getRiskBorderColor(area.riskLevel),
+                        fillOpacity: 0.35,
+                        weight: 2
+                    });
+
+                    const popupContent = getPopupContent(area);
+                    circle.bindPopup(popupContent);
+
+                    riskLayerGroup.addLayer(circle);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
