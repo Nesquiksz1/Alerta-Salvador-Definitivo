@@ -488,7 +488,16 @@
     <audio id="clickSound" src="sounds/click.mp3" preload="auto"></audio>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    
     <script>
+        
+    // Redireciona para a página inicial ao apertar F5
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'F5') {
+            event.preventDefault();
+            window.location.href = 'index.html';
+        }
+    });
         const legend = document.getElementById('legend');
         const infoPanel = document.getElementById('infoPanel');
         const linksMenu = document.getElementById('linksMenu');
